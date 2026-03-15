@@ -6,103 +6,140 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com">
-    <title>Super Prevodník</title>
+    <title>Auto-Moto Prevodník</title>
     <style>
-        :root { --bg: #f2f2f7; --card: #ffffff; --accent: #007aff; --text: #1c1c1e; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; padding-top: 30px; margin: 0; color: var(--text); }
-        .app { width: 92%; max-width: 380px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); }
-        h2 { text-align: center; font-size: 24px; margin-bottom: 20px; font-weight: 700; }
-        select, input { width: 100%; padding: 15px; margin: 8px 0; border: 1px solid #d1d1d6; border-radius: 14px; font-size: 17px; box-sizing: border-box; -webkit-appearance: none; background: #fff; }
-        .group { margin-bottom: 20px; }
-        label { font-size: 13px; color: #8e8e93; margin-left: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        input:focus { outline: none; border-color: var(--accent); ring: 2px solid var(--accent); }
-        input[readonly] { background: #f9f9fb; color: var(--accent); font-weight: 700; border-color: #e5e5ea; }
+        :root { --bg: #f2f2f7; --card: #ffffff; --accent: #ff3b30; --text: #1c1c1e; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px 0; margin: 0; color: var(--text); }
+        .app { width: 92%; max-width: 400px; background: var(--card); padding: 20px; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        h2 { text-align: center; font-size: 20px; margin-bottom: 15px; color: var(--accent); font-weight: 800; }
+        select, input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #d1d1d6; border-radius: 12px; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; }
+        .group { margin-bottom: 15px; padding: 10px; border: 1px solid #f0f0f0; border-radius: 15px; background: #fafafa; }
+        label { font-size: 10px; color: #8e8e93; margin-left: 5px; font-weight: 700; text-transform: uppercase; }
+        .row { display: flex; gap: 8px; }
+        .row select { flex: 1; }
+        input[readonly] { background: #fff; color: var(--accent); font-weight: 700; border-color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <h2>Prevodník</h2>
+    <h2>AUTO-MOTO TOOL</h2>
     
     <div class="group">
         <label>Kategória</label>
         <select id="mode" onchange="updateUnits()">
-            <option value="pressure">Tlak (Pa, bar, atm, psi...)</option>
-            <option value="length">Dĺžka (m, km, ft, in, mi...)</option>
-            <option value="weight">Hmotnosť (kg, g, lb, oz...)</option>
-            <option value="temp">Teplota (°C, °F, K)</option>
-            <option value="volume">Objem (l, ml, m³, gal...)</option>
-            <option value="area">Plocha (m², ha, ár, akre...)</option>
-            <option value="speed">Rýchlosť (km/h, m/s, uzly...)</option>
+            <option value="power">Výkon (kW, koní PS...)</option>
+            <option value="torque">Krútiaci moment (Nm, lb-ft)</option>
+            <option value="pressure">Tlak (bar, psi, kPa...)</option>
+            <option value="volume">Objem (litre, m³, gal...)</option>
+            <option value="consumption">Spotreba (l/100km, MPG)</option>
+            <option value="speed">Rýchlosť (km/h, mph...)</option>
+            <option value="weight">Hmotnosť (kg, lb...)</option>
         </select>
     </div>
 
     <div class="group">
-        <label>Z hodnoty</label>
-        <input type="number" id="inputVal" placeholder="Zadaj množstvo" oninput="convert()">
-        <select id="unitFrom" onchange="convert()"></select>
+        <label>Vstupná hodnota</label>
+        <input type="number" id="inputVal" placeholder="0" oninput="convert()">
+        <div class="row" id="prefixRowIn">
+            <select id="prefixFrom" onchange="convert()"></select>
+            <select id="unitFrom" onchange="convert()"></select>
+        </div>
     </div>
 
     <div class="group">
         <label>Výsledok</label>
+        <div class="row" id="prefixRowOut">
+            <select id="prefixTo" onchange="convert()"></select>
+            <select id="unitTo" onchange="convert()"></select>
+        </div>
         <input type="text" id="outputVal" readonly>
-        <select id="unitTo" onchange="convert()"></select>
     </div>
 </div>
 
 <script>
-    const units = {
-        pressure: { "Pascal (Pa)": 1, "Hektopascal (hPa)": 100, "Bar (bar)": 100000, "Atmosféra (atm)": 101325, "PSI (lb/in²)": 6894.76, "Torr (mmHg)": 133.322 },
-        length: { "Meter (m)": 1, "Kilometer (km)": 1000, "Centimeter (cm)": 0.01, "Milimeter (mm)": 0.001, "Palec (in)": 0.0254, "Stopa (ft)": 0.3048, "Míľa (mi)": 1609.34, "Námorná míľa": 1852 },
-        weight: { "Kilogram (kg)": 1, "Gram (g)": 0.001, "Tona (t)": 1000, "Libra (lb)": 0.45359, "Unca (oz)": 0.02835 },
-        volume: { "Liter (l)": 1, "Mililiter (ml)": 0.001, "Meter kubický (m³)": 1000, "Galón (US)": 3.7854, "Pinta (UK)": 0.5682 },
-        area: { "Meter štvorc. (m²)": 1, "Kilometer štvorc. (km²)": 1000000, "Hektár (ha)": 10000, "Ár (a)": 100, "Aker (ac)": 4046.86 },
-        speed: { "km/h": 1, "m/s": 3.6, "míle/h (mph)": 1.60934, "Uzly (kn)": 1.852 },
-        temp: { "Celsius (°C)": "C", "Fahrenheit (°F)": "F", "Kelvin (K)": "K" }
+    const prefixes = {
+        "Mega (10⁶)": 1000000, "Kilo (10³)": 1000, "Jednotka (1)": 1,
+        "Mili (10⁻³)": 0.001, "Mikro (10⁻⁶)": 0.000001
     };
+
+    const units = {
+        power: { "Kilowatt (kW)": 1000, "Kôň metrický (PS)": 735.5, "Kôň mech. (hp)": 745.7, "Watt (W)": 1 },
+        torque: { "Newtonmeter (Nm)": 1, "Libra-stopa (lb-ft)": 1.3558 },
+        pressure: { "Bar (bar)": 100000, "PSI": 6894.76, "Pascal (Pa)": 1, "Atmosféra (atm)": 101325 },
+        volume: { "Liter (l)": 1, "Meter kub. (m³)": 1000, "Galón (US)": 3.785, "Pinta (UK)": 0.568, "Mililiter (ml)": 0.001 },
+        consumption: { "l/100 km": "L100", "MPG (US)": "MPG_US", "MPG (UK)": "MPG_UK" },
+        speed: { "km/h": 1, "m/s": 3.6, "mph": 1.60934 },
+        weight: { "Kilogram (kg)": 1000, "Gram (g)": 1, "Libra (lb)": 453.59 }
+    };
+
+    function init() {
+        const pFrom = document.getElementById('prefixFrom');
+        const pTo = document.getElementById('prefixTo');
+        Object.keys(prefixes).forEach(p => {
+            pFrom.add(new Option(p, prefixes[p]));
+            pTo.add(new Option(p, prefixes[p]));
+        });
+        pFrom.value = "1"; pTo.value = "1";
+        updateUnits();
+    }
 
     function updateUnits() {
         const mode = document.getElementById('mode').value;
-        const from = document.getElementById('unitFrom');
-        const to = document.getElementById('unitTo');
-        from.innerHTML = ""; to.innerHTML = "";
+        const uFrom = document.getElementById('unitFrom');
+        const uTo = document.getElementById('unitTo');
+        const prefIn = document.getElementById('prefixRowIn');
+        const prefOut = document.getElementById('prefixRowOut');
         
+        uFrom.innerHTML = ""; uTo.innerHTML = "";
+        
+        // Spotreba nemá násobky (kilo-litre na 100km nedávajú zmysel)
+        if (mode === "consumption") {
+            prefIn.style.display = "none"; prefOut.style.display = "none";
+        } else {
+            prefIn.style.display = "flex"; prefOut.style.display = "flex";
+        }
+
         Object.keys(units[mode]).forEach(u => {
-            from.add(new Option(u, u));
-            to.add(new Option(u, u));
+            uFrom.add(new Option(u, units[mode][u]));
+            uTo.add(new Option(u, units[mode][u]));
         });
-        to.selectedIndex = 1;
+        
+        uTo.selectedIndex = 1;
         convert();
     }
 
     function convert() {
         const mode = document.getElementById('mode').value;
         const val = parseFloat(document.getElementById('inputVal').value);
-        const from = document.getElementById('unitFrom').value;
-        const to = document.getElementById('unitTo').value;
+        const prefFrom = parseFloat(document.getElementById('prefixFrom').value);
+        const prefTo = parseFloat(document.getElementById('prefixTo').value);
+        const uFrom = document.getElementById('unitFrom').value;
+        const uTo = document.getElementById('unitTo').value;
         const out = document.getElementById('outputVal');
-        
+
         if (isNaN(val)) { out.value = ""; return; }
 
         let result;
-        if (mode === "temp") {
-            let celsius;
-            if (from.includes("Celsius")) celsius = val;
-            else if (from.includes("Fahrenheit")) celsius = (val - 32) * 5/9;
-            else celsius = val - 273.15;
+        if (mode === "consumption") {
+            // Špeciálny nelineárny prepočet pre spotrebu
+            let l100;
+            if (uFrom === "L100") l100 = val;
+            else if (uFrom === "MPG_US") l100 = 235.215 / val;
+            else l100 = 282.481 / val;
 
-            if (to.includes("Celsius")) result = celsius;
-            else if (to.includes("Fahrenheit")) result = (celsius * 9/5) + 32;
-            else result = celsius + 273.15;
+            if (uTo === "L100") result = l100;
+            else if (uTo === "MPG_US") result = 235.215 / l100;
+            else result = 282.481 / l100;
         } else {
-            const inBase = val * units[mode][from];
-            result = inBase / units[mode][to];
+            const baseValue = val * prefFrom * parseFloat(uFrom);
+            result = baseValue / (prefTo * parseFloat(uTo));
         }
         
-        out.value = result < 0.00001 && result > 0 ? result.toExponential(4) : Number(result.toFixed(5));
+        out.value = result < 0.000001 && result > 0 ? result.toExponential(4) : Number(result.toFixed(3));
     }
 
-    updateUnits();
+    init();
 </script>
 </body>
 </html>
